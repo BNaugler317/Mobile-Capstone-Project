@@ -1,56 +1,81 @@
-
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack(spacing: 0) {
-            // this ForEach loop repates the HStack 9 times vertically
-            ForEach(0..<9, id: \.self) { row in
-                // HStack arranges 9 boxes in a row via a ForEach loop
-                HStack(spacing: 0) {
-                    ForEach(0..<9) { column in
-                        SudokuCell(number: "\(column + 1)",
-                                   row: row, column: column)
+    
+    @State private var selectedCell : (row: Int, column: Int)? = nil
+    @State private var board = createdBoard()
+    
+    func isCellSelected(row: Int, column: Int) -> Bool {
+        return selectedCell?.row == row && selectedCell?.column == column
+    }
+    
+    func isCellHighlighted(row: Int, column: Int) -> Bool {
+        return selectedCell?.row == row || selectedCell?.column == column
+    }
+    
+    func enterNumber(_ number: Int) {
+        guard let selectedCell = selectedCell else { return }
+        
+        let row = selectedCell.row
+        let column = selectedCell.column
+        
+        if !board[row][column].isLocked {
+            board[row][column].value = number
+        }
+    }
+        var body: some View {
+            VStack(spacing: 20) {
+                VStack {
+                    HStack {
+                        ForEach(1...4, id: \.self) { number in
+                            Button("\(number)") {
+                                enterNumber(number)
+                            }
+                        }
                     }
                     
+                    HStack {
+                        ForEach(5...9, id: \.self) { number in
+                            Button("\(number)") {
+                                enterNumber(number)
+                            }
+                        }
+                    }
                 }
-                
+                VStack(spacing: 0) {
+                    // this ForEach loop repates the HStack 9 times vertically
+                    ForEach(0..<9, id: \.self) { row in
+                        // HStack arranges 9 boxes in a row via a ForEach loop
+                        HStack(spacing: 0) {
+                            ForEach(0..<9) { column in
+                                
+                                SudokuCell(
+                                    number: board[row][column].displayValue,
+                                    row: row,
+                                    column: column,
+                                    isSelected: isCellSelected(row: row, column: column),
+                                    isHighlighted: isCellHighlighted(row: row, column: column),
+                                    isLocked: board[row][column].isLocked
+                                )
+                                .onTapGesture {
+                                    if !board[row][column].isLocked {
+                                        selectedCell = (row, column)
+                                    }
+                                }
+                            }
+                            
+                        }
+                        
+                    }
+                }
+                .overlay(
+                    SudokuGridLines()
+                )
             }
         }
-        .overlay(
-            SudokuGridLines()
-        )
-    }
         
-}
-    
-
-// creates a reusable cell that consists of box and number
-struct SudokuCell: View {
-    
-    let number: String
-    let row: Int
-    let column: Int
-    
-    var body: some View {
-        ZStack {
-            Rectangle()
-                .fill(
-                    ((row / 3 + column / 3) % 2 == 0)
-                    ? Color.gray.opacity(0.6)
-                    : Color.white
-                )
-                .border(Color.black, width: 1)
-            
-            Text(number)
-                .font(.largeTitle)
-                .foregroundColor(.black)
-                
-        }
-        .frame(width: 40, height: 40)
     }
-}
-
+    
 struct SudokuGridLines: View {
     var body: some View {
         ZStack {
