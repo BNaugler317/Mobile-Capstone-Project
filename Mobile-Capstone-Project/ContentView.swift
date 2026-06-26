@@ -4,6 +4,8 @@ struct ContentView: View {
     
     @State private var selectedCell : (row: Int, column: Int)? = nil
     @State private var board = createdBoard()
+    @State private var showInvalidMoveAlert = false
+    @State private var invalidMoveMessage = ""
     
     func isCellSelected(row: Int, column: Int) -> Bool {
         return selectedCell?.row == row && selectedCell?.column == column
@@ -19,8 +21,23 @@ struct ContentView: View {
         let row = selectedCell.row
         let column = selectedCell.column
         
-        if !board[row][column].isLocked {
-            board[row][column].value = number
+        if board[row][column].isLocked {
+            return
+        }
+        
+        board[row][column].value = number
+        
+        if SudokuValidator.isValidMove(
+            board: board,
+            row: row,
+            column: column,
+            value: number
+        ) {
+            board[row][column].isInvalid = false
+        } else {
+            board[row][column].isInvalid = true
+            invalidMoveMessage = "Invalid move. This number already exists in the same row, column or 3x3 box."
+            showInvalidMoveAlert = true
         }
     }
         var body: some View {
@@ -55,7 +72,8 @@ struct ContentView: View {
                                     column: column,
                                     isSelected: isCellSelected(row: row, column: column),
                                     isHighlighted: isCellHighlighted(row: row, column: column),
-                                    isLocked: board[row][column].isLocked
+                                    isLocked: board[row][column].isLocked,
+                                    isInvalid: board[row][column].isInvalid
                                 )
                                 .onTapGesture {
                                     if !board[row][column].isLocked {
@@ -71,6 +89,11 @@ struct ContentView: View {
                 .overlay(
                     SudokuGridLines()
                 )
+            }
+            .alert("Invalid Move", isPresented: $showInvalidMoveAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(invalidMoveMessage)
             }
         }
         

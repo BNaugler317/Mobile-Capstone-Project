@@ -8,6 +8,7 @@ struct SudokuCell: View {
     let isSelected: Bool
     let isHighlighted: Bool
     let isLocked: Bool
+    let isInvalid: Bool
     
     
     var body: some View {
@@ -18,7 +19,7 @@ struct SudokuCell: View {
             
             Text("\(number)")
                 .font(.title2)
-                .foregroundColor(isSelected ? .blue : .black)
+                .foregroundColor(textColor)
         }
         .frame(width: 40, height: 40)
     }
@@ -37,5 +38,17 @@ struct SudokuCell: View {
         return ((row / 3 + column / 3) % 2 == 0)
         ? Color.gray.opacity(0.6)
         : Color.white
+    }
+    
+    var textColor: Color {
+        if isInvalid {
+            return .red
+        }
+        
+        if isLocked {
+            return .black
+        }
+        
+        return .blue
     }
 }
